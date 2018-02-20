@@ -29,9 +29,18 @@ instantiateCachedURL(VER, url, (imports = {})).then(instance => {
 });
 
 function run(id, images) {
+  const min = d =>
+    Math.min(d.before.width * d.before.height, d.after.width * d.after.height);
   if (typeof id === "undefined") return;
-  q.forEach(d => {
-    setTimeout(() => {
+  q
+    .sort((a, b) => {
+      const mina = min(a);
+      const minb = min(b);
+      if (mina < minb) return -1;
+      if (mina > minb) return 1;
+      return 0;
+    })
+    .forEach(d => {
       console.time("diff");
       const result = diff(d.before, d.after);
       console.timeEnd("diff");
@@ -48,10 +57,8 @@ function run(id, images) {
         },
         diff: result
       };
-      console.log(data);
       chrome.tabs.sendMessage(id, data);
     });
-  });
   q = [];
 }
 

@@ -70,6 +70,7 @@ function appendBackdrop() {
   backdrop.style.minWidth = "100%";
   backdrop.style.height = "100%";
   backdrop.style.display = "none";
+  backdrop.style.flexDirection = "row";
   backdrop.style.justifyContent = "center";
   backdrop.style.padding = "100px 5% 0 5%";
   backdrop.style.zIndex = 9999;
@@ -99,9 +100,11 @@ function addLinkEventListener(file, cb) {
 function appendImage({ url, differences, height, marginRight, rgba }) {
   const backdrop = findBackdrop();
   if (!backdrop) return;
+  backdrop.style.flexDirection = "row";
   const wrapper = document.createElement("div");
   wrapper.style.maxWidth = "40%";
   if (marginRight) wrapper.style.marginRight = `${marginRight}px`;
+  wrapper.style.marginBottom = "20px";
   const inner = document.createElement("div");
   inner.style.position = "relative";
   const img = document.createElement("img");
@@ -113,7 +116,6 @@ function appendImage({ url, differences, height, marginRight, rgba }) {
   inner.appendChild(img);
   wrapper.appendChild(inner);
   backdrop.appendChild(wrapper);
-
   differences.forEach(diff => {
     const top = `${diff[0] / height * 100}%`;
     const markHeight = `${(diff[1] - diff[0]) / height * 100}%`;
@@ -125,4 +127,22 @@ function appendImage({ url, differences, height, marginRight, rgba }) {
     mark.style.background = `rgba(${rgba})`;
     inner.appendChild(mark);
   });
+}
+
+function setColumnStyle() {
+  const backdrop = findBackdrop();
+  if (!backdrop) return;
+  backdrop.style.flexDirection = "column";
+  backdrop.style.justifyContent = "initial";
+  backdrop.style.alignItems = "center";
+  const wrappers = backdrop.querySelectorAll(`.${BACKDROP_CLASS_NAME} > div`);
+  wrappers.forEach(w => (w.style.maxWidth = "60%"));
+}
+
+function setRowStyle() {
+  const backdrop = findBackdrop();
+  if (!backdrop) return;
+  backdrop.style.flexDirection = "row";
+  backdrop.style.justifyContent = "center";
+  backdrop.style.alignItems = "initial";
 }

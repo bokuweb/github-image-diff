@@ -79,6 +79,13 @@ function addDiffImages(index, e) {
     height: result.after.height,
     rgba: "99, 195, 99, 0.6"
   });
+  const afterRatio = result.after.width / result.after.height;
+  const beforeRatio = result.before.width / result.before.height;
+  if (afterRatio > 1.5 && beforeRatio > 1.5) {
+    setColumnStyle();
+  } else {
+    setRowStyle();
+  }
 }
 
 function getImageUrls(text) {
