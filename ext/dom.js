@@ -44,7 +44,7 @@ function appendLinkToFile(file) {
   const link = document.createElement("a");
   link.setAttribute("aria-label", "Diff");
   link.style.pointerEvents = "none";
-  link.style.opacity = 0.6;
+  link.style.opacity = 0.4;
   link.classList.add(
     "btn",
     "btn-sm",
@@ -75,7 +75,7 @@ function appendBackdrop() {
   backdrop.style.zIndex = 9999;
   backdrop.style.overflow = "scroll";
   backdrop.style.cursor = "pointer";
-  backdrop.style.background = "rgba(0,0,0,0.6)";
+  backdrop.style.background = "rgba(0,0,0,0.5)";
   backdrop.addEventListener("click", () => {
     backdrop.style.display = "none";
     document.body.style.overflow = "auto";
@@ -108,14 +108,15 @@ function appendImage({ url, differences, height, marginRight, rgba }) {
   img.src = url;
   img.style.width = "100%";
   img.style.height = "auto";
+  img.style.verticalAlign = "bottom";
   img.addEventListener("click", e => e.stopPropagation());
   inner.appendChild(img);
   wrapper.appendChild(inner);
   backdrop.appendChild(wrapper);
 
   differences.forEach(diff => {
-    const top = `${diff[0] / height * 99.5}%`;
-    const markHeight = `${(diff[1] - diff[0]) / height * 99.5}%`;
+    const top = `${diff[0] / height * 100}%`;
+    const markHeight = `${(diff[1] - diff[0]) / height * 100}%`;
     const mark = document.createElement("div");
     mark.style.position = "absolute";
     mark.style.top = top;

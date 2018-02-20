@@ -18,6 +18,8 @@ let subscribed = false;
 
 function onDiffComplete({ index, before, after, diff }) {
   console.log(index, before, diff);
+  if (!results[location.href]) results[location.href] = [];
+  if (!results[location.href][index]) return;
   results[location.href][index] = {
     before: {
       ...before,
