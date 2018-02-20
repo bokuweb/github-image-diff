@@ -1,0 +1,8 @@
+{
+  "name": "lcs-image-diff-js",
+  "version": "0.1.0",
+  "main": "index.js",
+  "repository": "https://github.com/bokuweb/lcs-image-diff-js.git",
+  "author": "bokuweb <bokuweb12@gmail.com>",
+  "license": "MIT"
+}
