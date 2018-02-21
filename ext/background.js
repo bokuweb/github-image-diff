@@ -1,4 +1,5 @@
 const VER = 100;
+const SCALE_BASE = 680;
 const url = "./diff.wasm";
 let q = [];
 
@@ -13,14 +14,16 @@ chrome.webNavigation.onDOMContentLoaded.addListener(() => {
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (q.find(q => q.index === msg.index)) return;
   Promise.all(msg.urls.map(url => fetchImage(url))).then(images => {
-    console.log(images);
-    q.push({
-      index: msg.index,
-      before: images[0],
-      after: images[1]
+    convertImages(images).then(convertedImages => {
+      q.push({
+        index: msg.index,
+        before: convertedImages[0],
+        after: convertedImages[1],
+        scale: convertedImages[0].scale
+      });
+      if (!self.mod) return;
+      run(sender.tab.id, convertedImages);
     });
-    if (!self.mod) return;
-    run(sender.tab.id, images);
   });
 });
 
@@ -28,22 +31,55 @@ instantiateCachedURL(VER, url, (imports = {})).then(instance => {
   self.mod = instance;
 });
 
+function convertImages(images) {
+  return Promise.all(
+    images.map(
+      image =>
+        new Promise(resolve => {
+          image.addEventListener("load", () => {
+            const scale = SCALE_BASE / image.naturalHeight;
+            resolve({ image, scale });
+          });
+        })
+    )
+  ).then(res => {
+    const min = Math.min(res[0].scale, res[1].scale);
+    const scale = min > 1 ? 1 : min;
+    return res.map(({ image }) => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      ctx.drawImage(image, 0, 0);
+      ctx.scale(scale, scale);
+      return {
+        url: image.src,
+        data: ctx.getImageData(
+          0,
+          0,
+          canvas.width * scale,
+          canvas.height * scale
+        ).data,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        scale
+      };
+    });
+  });
+}
+
 function run(id, images) {
-  const min = d =>
-    Math.min(d.before.width * d.before.height, d.after.width * d.after.height);
+  // const min = d =>
+  //   Math.min(d.before.width * d.before.height, d.after.width * d.after.height);
   if (typeof id === "undefined") return;
+  console.log("[log] run");
   q
-    .sort((a, b) => {
-      const mina = min(a);
-      const minb = min(b);
-      if (mina < minb) return -1;
-      if (mina > minb) return 1;
-      return 0;
-    })
     .forEach(d => {
       console.time("diff");
       const result = diff(d.before, d.after);
       console.timeEnd("diff");
+      const scale = d.scale * d.scale;
+      console.log(scale);
       const data = {
         type: "diff",
         index: d.index,
@@ -55,8 +91,16 @@ function run(id, images) {
           width: images[1].width,
           height: images[1].height
         },
-        diff: result
+        diff: {
+          before: result.before.map(r =>
+            r.map((s, i) => +((+s.toFixed() + i) / scale).toFixed())
+          ),
+          after: result.after.map(r =>
+            r.map((s, i) => +((+s.toFixed() + i) / scale).toFixed())
+          )
+        }
       };
+      console.log("[log]result", data);
       chrome.tabs.sendMessage(id, data);
     });
   q = [];
@@ -93,28 +137,14 @@ function diff(before, after) {
 }
 
 function fetchImage(url) {
-  return new Promise((resolve, reject) => {
-    fetch(url)
-      .then(img => img.blob())
-      .then(blob => {
-        const objectURL = URL.createObjectURL(blob);
-        const image = new Image();
-        image.src = objectURL;
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        image.addEventListener("load", () => {
-          canvas.width = image.naturalWidth;
-          canvas.height = image.naturalHeight;
-          ctx.drawImage(image, 0, 0);
-          resolve({
-            url: objectURL,
-            data: ctx.getImageData(0, 0, canvas.width, canvas.height).data,
-            width: image.naturalWidth,
-            height: image.naturalHeight
-          });
-        });
-      });
-  });
+  return fetch(url)
+    .then(img => img.blob())
+    .then(blob => {
+      const objectURL = URL.createObjectURL(blob);
+      const image = new Image();
+      image.src = objectURL;
+      return image;
+    });
 }
 
 // 1. +++ fetchAndInstantiate() +++ //

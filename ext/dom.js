@@ -103,7 +103,7 @@ function appendImage({ url, differences, height, marginRight, rgba }) {
   backdrop.style.flexDirection = "row";
   const wrapper = document.createElement("div");
   wrapper.style.maxWidth = "40%";
-  if (marginRight) wrapper.style.marginRight = `${marginRight}px`;
+  wrapper.style.marginRight = `${marginRight}px`;
   wrapper.style.marginBottom = "20px";
   const inner = document.createElement("div");
   inner.style.position = "relative";

@@ -17,7 +17,6 @@ let subscribed = false;
 })();
 
 function onDiffComplete({ index, before, after, diff }) {
-  console.log(index, before, diff);
   if (!results[location.href]) results[location.href] = [];
   if (!results[location.href][index]) return;
   results[location.href][index] = {
@@ -77,6 +76,7 @@ function addDiffImages(index, e) {
     url: result.after.url,
     differences: result.diff.after,
     height: result.after.height,
+    marginRight: 20,
     rgba: "99, 195, 99, 0.6"
   });
   const afterRatio = result.after.width / result.after.height;
