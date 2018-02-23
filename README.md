@@ -4,6 +4,19 @@
 ## Demo
 ![screenshot](https://github.com/bokuweb/github-image-diff/blob/master/screenshot.gif?raw=true)
 
+## Install
+
+### Webstore
+
+Please install below URL
+
+https://chrome.google.com/webstore/detail/ilbghodjnphlcjbknbahhoimjabkngii/publish-accepted?hl=ja
+
+### Github
+
+- Clone this repository.
+- Read `ext` directory with chrome.
+
 ## Related
 
 - [lcs-image-diff-rs](https://github.com/bokuweb/lcs-image-diff-rs)
