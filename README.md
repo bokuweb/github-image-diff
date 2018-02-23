@@ -10,7 +10,7 @@
 
 Please install below URL
 
-https://chrome.google.com/webstore/detail/ilbghodjnphlcjbknbahhoimjabkngii/publish-accepted?hl=ja
+https://chrome.google.com/webstore/detail/ilbghodjnphlcjbknbahhoimjabkngii
 
 ### Github
 
