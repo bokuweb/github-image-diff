@@ -16,7 +16,7 @@ let subscribed = false;
   });
 })();
 
-function onDiffComplete({ index, before, after, diff }) {
+function onDiffComplete({ index, before, after, diff, scale }) {
   if (!results[location.href]) results[location.href] = [];
   if (!results[location.href][index]) return;
   results[location.href][index] = {
@@ -28,7 +28,8 @@ function onDiffComplete({ index, before, after, diff }) {
       ...after,
       ...results[location.href][index].after
     },
-    diff
+    diff,
+    scale,
   };
   enableLinkByIndex(index);
 }
@@ -70,14 +71,16 @@ function addDiffImages(index, e) {
     differences: result.diff.before,
     height: result.before.height,
     marginRight: 20,
-    rgba: "255, 119, 119, 0.6"
+    rgba: "255, 119, 119, 0.6",
+    scale: result.scale,
   });
   appendImage({
     url: result.after.url,
     differences: result.diff.after,
     height: result.after.height,
     marginRight: 20,
-    rgba: "99, 195, 99, 0.6"
+    rgba: "99, 195, 99, 0.6",
+    scale: result.scale,
   });
   const afterRatio = result.after.width / result.after.height;
   const beforeRatio = result.before.width / result.before.height;
@@ -99,27 +102,4 @@ function getImageUrls(text) {
   return matches;
 }
 
-function fetchImage(url) {
-  return new Promise((resolve, reject) => {
-    fetch(url)
-      .then(img => img.blob())
-      .then(blob => {
-        const objectURL = URL.createObjectURL(blob);
-        const image = new Image();
-        image.src = objectURL;
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        image.addEventListener("load", () => {
-          canvas.width = image.naturalWidth;
-          canvas.height = image.naturalHeight;
-          ctx.drawImage(image, 0, 0);
-          resolve({
-            url: objectURL,
-            data: ctx.getImageData(0, 0, canvas.width, canvas.height).data,
-            width: image.naturalWidth,
-            height: image.naturalHeight
-          });
-        });
-      });
-  });
-}
+

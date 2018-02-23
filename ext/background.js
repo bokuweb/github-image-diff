@@ -1,12 +1,16 @@
 const VER = 100;
-const SCALE_BASE = 680;
+const SCALE_THRESHOLD = 800;
+const MINIMUM_SCALE = 0.3;
 const url = "./diff.wasm";
 let q = [];
+
+const memory = new WebAssembly.Memory({ initial: 200 });
+const imports = { js: { mem: memory } };
 
 chrome.webNavigation.onDOMContentLoaded.addListener(() => {
   q = [];
   chrome.tabs.query({ currentWindow: true, active: true }, tabArray => {
-    if (typeof tabArray[0].id === "undefined") return;
+    if (!tabArray[0] || typeof tabArray[0].id === "undefined") return;
     chrome.tabs.sendMessage(tabArray[0].id, { type: "loaded" }, () => {});
   });
 });
@@ -27,8 +31,16 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
   });
 });
 
-instantiateCachedURL(VER, url, (imports = {})).then(instance => {
+instantiateCachedURL(VER, url, imports).then(instance => {
   self.mod = instance;
+  console.log(self.mod.exports.memory.buffer, "buf len");
+  // const before = new Uint8Array([0, 0, 0, 0]);
+  // const after = new Uint8Array([100, 100, 100, 100]);
+  // const result = diff(
+  //   { data: before, width: 1, height: 1 },
+  //   { data: after, width: 1, height: 1 }
+  // );
+  // console.log(result);
 });
 
 function convertImages(images) {
@@ -36,10 +48,16 @@ function convertImages(images) {
     images.map(
       image =>
         new Promise(resolve => {
+          const org = image.src;
+          image.src = null;
           image.addEventListener("load", () => {
-            const scale = SCALE_BASE / image.naturalHeight;
-            resolve({ image, scale });
+            const scale =
+              SCALE_THRESHOLD > image.naturalHeight
+                ? 1
+                : SCALE_THRESHOLD / image.naturalHeight;
+            resolve({ image, scale: Math.max(scale, MINIMUM_SCALE) });
           });
+          image.src = org;
         })
     )
   ).then(res => {
@@ -50,8 +68,8 @@ function convertImages(images) {
       const ctx = canvas.getContext("2d");
       canvas.width = image.naturalWidth;
       canvas.height = image.naturalHeight;
-      ctx.drawImage(image, 0, 0);
       ctx.scale(scale, scale);
+      ctx.drawImage(image, 0, 0);
       return {
         url: image.src,
         data: ctx.getImageData(
@@ -73,43 +91,43 @@ function run(id, images) {
   //   Math.min(d.before.width * d.before.height, d.after.width * d.after.height);
   if (typeof id === "undefined") return;
   console.log("[log] run");
-  q
-    .forEach(d => {
-      console.time("diff");
-      const result = diff(d.before, d.after);
-      console.timeEnd("diff");
-      const scale = d.scale * d.scale;
-      console.log(scale);
-      const data = {
-        type: "diff",
-        index: d.index,
-        before: {
-          width: images[0].width,
-          height: images[0].height
-        },
-        after: {
-          width: images[1].width,
-          height: images[1].height
-        },
-        diff: {
-          before: result.before.map(r =>
-            r.map((s, i) => +((+s.toFixed() + i) / scale).toFixed())
-          ),
-          after: result.after.map(r =>
-            r.map((s, i) => +((+s.toFixed() + i) / scale).toFixed())
-          )
-        }
-      };
-      console.log("[log]result", data);
-      chrome.tabs.sendMessage(id, data);
-    });
+  q.forEach(d => {
+    console.time("diff");
+    console.log("[log] data", d);
+    const result = diff(d.before, d.after);
+    console.timeEnd("diff");
+    console.log("[log] diff result", result);
+    const scale = d.scale;
+    const data = {
+      type: "diff",
+      index: d.index,
+      before: {
+        width: images[0].width,
+        height: images[0].height
+      },
+      after: {
+        width: images[1].width,
+        height: images[1].height
+      },
+      diff: {
+        before: result.before.map(r =>
+          r.map((s, i) => +((+s.toFixed() + i) / scale).toFixed())
+        ),
+        after: result.after.map(r =>
+          r.map((s, i) => +((+s.toFixed() + i) / scale).toFixed())
+        )
+      },
+      scale
+    };
+    console.log("[log]result", data);
+    chrome.tabs.sendMessage(id, data);
+  });
   q = [];
 }
 
 function diff(before, after) {
   const beforePtr = self.mod.exports.alloc(before.data.length);
   const afterPtr = self.mod.exports.alloc(after.data.length);
-
   const heap = new Uint8Array(self.mod.exports.memory.buffer);
   heap.set(before.data, beforePtr);
   heap.set(after.data, afterPtr);
@@ -122,6 +140,8 @@ function diff(before, after) {
     after.data.length,
     after.width
   );
+  self.mod.exports.free(beforePtr, before.data.length);
+  self.mod.exports.free(afterPtr, after.data.length);
   const resultBuf = new Uint8Array(self.mod.exports.memory.buffer, resultPtr);
   const getSize = buf => {
     let i = 0;
@@ -131,8 +151,7 @@ function diff(before, after) {
   const resultSize = getSize(resultBuf);
   const json = String.fromCharCode.apply(null, resultBuf.slice(0, resultSize));
   const result = JSON.parse(json);
-  self.mod.exports.free(beforePtr, before.data.length);
-  self.mod.exports.free(afterPtr, after.data.length);
+  self.mod.exports.free(resultPtr, resultSize);
   return result;
 }
 

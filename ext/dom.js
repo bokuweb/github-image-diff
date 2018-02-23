@@ -97,7 +97,7 @@ function addLinkEventListener(file, cb) {
   link.addEventListener("click", cb);
 }
 
-function appendImage({ url, differences, height, marginRight, rgba }) {
+function appendImage({ url, differences, height, marginRight, rgba, scale }) {
   const backdrop = findBackdrop();
   if (!backdrop) return;
   backdrop.style.flexDirection = "row";
@@ -117,8 +117,8 @@ function appendImage({ url, differences, height, marginRight, rgba }) {
   wrapper.appendChild(inner);
   backdrop.appendChild(wrapper);
   differences.forEach(diff => {
-    const top = `${diff[0] / height * 100}%`;
-    const markHeight = `${(diff[1] - diff[0]) / height * 100}%`;
+    const top = `${diff[0] / height * 100 / scale}%`;
+    const markHeight = `${(diff[1] - diff[0]) / height * 100 / scale}%`;
     const mark = document.createElement("div");
     mark.style.position = "absolute";
     mark.style.top = top;
