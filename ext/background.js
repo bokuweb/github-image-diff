@@ -1,6 +1,6 @@
 const VER = 100;
 const SCALE_THRESHOLD = 800;
-const MINIMUM_SCALE = 0.3;
+const MINIMUM_SCALE = 1; // try no scale
 const url = "./diff.wasm";
 let q = [];
 
@@ -33,14 +33,7 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 
 instantiateCachedURL(VER, url, imports).then(instance => {
   self.mod = instance;
-  console.log(self.mod.exports.memory.buffer, "buf len");
-  // const before = new Uint8Array([0, 0, 0, 0]);
-  // const after = new Uint8Array([100, 100, 100, 100]);
-  // const result = diff(
-  //   { data: before, width: 1, height: 1 },
-  //   { data: after, width: 1, height: 1 }
-  // );
-  // console.log(result);
+  console.log(self.mod.exports.memory.buffer, "instantiated!!");
 });
 
 function convertImages(images) {
@@ -87,8 +80,6 @@ function convertImages(images) {
 }
 
 function run(id, images) {
-  // const min = d =>
-  //   Math.min(d.before.width * d.before.height, d.after.width * d.after.height);
   if (typeof id === "undefined") return;
   console.log("[log] run");
   q.forEach(d => {
