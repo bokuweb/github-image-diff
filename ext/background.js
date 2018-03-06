@@ -1,6 +1,6 @@
 const VER = 100;
 const SCALE_THRESHOLD = 800;
-const MINIMUM_SCALE = 1; // try no scale
+const MINIMUM_SCALE = 0.5;
 const url = "./diff.wasm";
 let q = [];
 
