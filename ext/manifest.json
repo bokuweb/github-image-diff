@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Github image diff",
-  "version": "0.1",
+  "version": "0.1.1",
   "background": {
     "scripts": ["background.js"],
     "persistent": false
