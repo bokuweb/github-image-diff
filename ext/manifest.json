@@ -3,7 +3,7 @@
   "name": "Github image diff",
   "version": "0.1.2",
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["gpu.js", "background.js"],
     "persistent": false
   },
   "icons": {
